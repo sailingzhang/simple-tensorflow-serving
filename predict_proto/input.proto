@@ -6,7 +6,7 @@ syntax = "proto3";
 option cc_enable_arenas = true;
 
 import "example.proto";
-
+option go_package = "proto/tensorflow";
 package tensorflow.serving;
 
 // Specifies one or more fully independent input Examples.

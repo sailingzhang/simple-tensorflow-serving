@@ -5,6 +5,7 @@ option cc_enable_arenas = true;
 import "input.proto";
 import "model.proto";
 
+option go_package = "proto/tensorflow";
 package tensorflow.serving;
 
 // A single class.
