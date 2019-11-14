@@ -1,4 +1,4 @@
 @cd /d %~dp0
 @set PROTO_DIR=.
-@protoc  -I  %PROTO_DIR%  --go_out=plugins=grpc:.  %PROTO_DIR%\tensor.proto
+@protoc  -I  %PROTO_DIR%  --go_out=plugins=grpc:.  %PROTO_DIR%\prediction_service.proto
 @pause
