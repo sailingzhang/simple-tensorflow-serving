@@ -1,11 +1,11 @@
 syntax = "proto3";
 
-package tensorflow;
+package tensorflow_s;
 option cc_enable_arenas = true;
 option java_outer_classname = "ResourceHandle";
 option java_multiple_files = true;
 option java_package = "org.tensorflow.framework";
-option go_package = "proto/tensorflow";
+option go_package = "proto/tensorflow_s";
 
 import "tensor_shape.proto";
 import "types.proto";

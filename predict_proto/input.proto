@@ -6,14 +6,14 @@ syntax = "proto3";
 option cc_enable_arenas = true;
 
 import "example.proto";
-option go_package = "proto/tensorflow";
-package tensorflow.serving;
+option go_package = "proto/tensorflow_s";
+package tensorflow_s.serving;
 
 // Specifies one or more fully independent input Examples.
 // See examples at:
 //     https://github.com/tensorflow/tensorflow/blob/master/tensorflow/core/example/example.proto
 message ExampleList {
-  repeated tensorflow.Example examples = 1;
+  repeated tensorflow_s.Example examples = 1;
 }
 
 // Specifies one or more independent input Examples, with a common context
@@ -70,8 +70,8 @@ message ExampleList {
 //     tensorflow/core/example/example.proto
 //     https://developers.google.com/protocol-buffers/docs/proto3#maps
 message ExampleListWithContext {
-  repeated tensorflow.Example examples = 1;
-  tensorflow.Example context = 2;
+  repeated tensorflow_s.Example examples = 1;
+  tensorflow_s.Example context = 2;
 }
 
 message Input {

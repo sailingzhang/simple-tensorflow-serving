@@ -4,8 +4,8 @@ option cc_enable_arenas = true;
 
 import "input.proto";
 import "model.proto";
-option go_package = "proto/tensorflow";
-package tensorflow.serving;
+option go_package = "proto/tensorflow_s";
+package tensorflow_s.serving;
 
 // Regression result for a single item (tensorflow.Example).
 message Regression {
@@ -26,7 +26,7 @@ message RegressionRequest {
   ModelSpec model_spec = 1;
 
   // Input data.
-  tensorflow.serving.Input input = 2;
+  tensorflow_s.serving.Input input = 2;
 }
 
 message RegressionResponse {
