@@ -1,8 +1,9 @@
-// package tfService
-package main
+package tfService
+// package main
 
 import (
 	"fmt"
+	"bytes"
 	"github.com/cihub/seelog"
 	tg "github.com/galeone/tfgo"
 
@@ -114,11 +115,15 @@ func my_tf2() {
 	// if err != nil {
 	// 	return
 	// }
-	// originalinput :=[10*160*160*3]float32{}
+	originalinput :=[10*160*160*3]float32{}
 	// fakeInput =[10][160][160][3]float32(originalinput)
 	// covertinpult :=make([10][160][160][3]float32{})
 	// fakeInput, _ := tf.NewTensor([10*160*160*3]float32{})
-	fakeInput, _ := tf.NewTensor([10][160][160][3]float32{})
+	r := bytes.NewReader([]byte(originalinput))
+	shape :=make([]int64)
+	shape =append(shape,10,160,160,3)
+	fakeInput,_=tf.ReadTensor(tf.DataType.float32,shape,r)
+	// fakeInput, _ := tf.NewTensor([10][160][160][3]float32{})
 	
 	fakeInput.Shape()
 	
