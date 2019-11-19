@@ -30,16 +30,38 @@ func (this * TfService1)Regress(ctx context.Context, req *pb.RegressionRequest) 
 }
 
 func (this * TfService1)Predict(ctx context.Context, req *pb.PredictRequest) (*pb.PredictResponse, error){
+	var err error
 	rsp := pb.PredictResponse{}
 	modelname := req.ModelSpec.GetName()
 	tag := req.GetModelSpec().GetSignatureName()
-	model, err := tf.LoadSavedModel(modelname, []string{tag}, nil)
-	if err != nil {
-		seelog.Errorf("open model=%v err, err=%v",)
-		return nil,nil
+	model,ok := this.modelMap[modelname]
+	if !ok{
+		model, err = tf.LoadSavedModel(modelname, []string{tag}, nil)
+		if err != nil {
+			seelog.Errorf("open model=%v err, err=%v",)
+			return nil,nil
+		}
 	}
+	inputTesorMap := make(map[tf.Output]*tf.Tensor)
+	outputTesorMap := make(map[tf.Output]*tf.Tensor)
+	for inkey,invalue :=range req.Inputs{
+		// dimension := value.GetTensorShape().GetDim()
 	
-	defer model.Session.Close()
+		inputTesorMap[model.Graph.Operation(inkey).Output(0)],_= tf.NewTensor(invalue.GetFloatVal())
+	}
+	for outValue := range req.OutputFilter{
+		outputTesorMap
+	}
+	_, err = model.Session.Run(
+		inputTesorMap,
+		[]tf.Output{
+			model.Graph.Operation("embeddings").Output(0), // Replace this with your output layer name
+		},
+		nil,
+	)
+
+	
+	// defer model.Session.Close()
 	return nil,nil
 }
 
