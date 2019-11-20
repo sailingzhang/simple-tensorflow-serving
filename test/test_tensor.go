@@ -1,9 +1,9 @@
-package tfService
-// package main
+// package tfService
+package main
 
 import (
-	"fmt"
 	"bytes"
+	"fmt"
 	"github.com/cihub/seelog"
 	tg "github.com/galeone/tfgo"
 
@@ -48,6 +48,7 @@ import (
 
 func my_tf() {
 	seelog.Tracef("enter")
+
 	// replace myModel and myTag with the appropriate exported names in the chestrays-keras-binary-classification.ipynb
 	// model, err := tf.LoadSavedModel("/tmp/emdmodel/10001", []string{"myTag"}, nil)
 	model, err := tf.LoadSavedModel("/tmp/emdmodel/10001", []string{"serve"}, nil)
@@ -94,9 +95,9 @@ func my_tf() {
 
 }
 
-
 func my_tf2() {
 	seelog.Tracef("enter")
+
 	// replace myModel and myTag with the appropriate exported names in the chestrays-keras-binary-classification.ipynb
 	// model, err := tf.LoadSavedModel("/tmp/emdmodel/10001", []string{"myTag"}, nil)
 	model, err := tf.LoadSavedModel("/tmp/emdmodel/10001", []string{"serve"}, nil)
@@ -115,19 +116,24 @@ func my_tf2() {
 	// if err != nil {
 	// 	return
 	// }
-	originalinput :=[10*160*160*3]float32{}
-	// fakeInput =[10][160][160][3]float32(originalinput)
-	// covertinpult :=make([10][160][160][3]float32{})
-	// fakeInput, _ := tf.NewTensor([10*160*160*3]float32{})
-	r := bytes.NewReader([]byte(originalinput))
-	shape :=make([]int64)
-	shape =append(shape,10,160,160,3)
-	fakeInput,_=tf.ReadTensor(tf.DataType.float32,shape,r)
-	// fakeInput, _ := tf.NewTensor([10][160][160][3]float32{})
-	
-	fakeInput.Shape()
-	
+
 	istrainInput, _ := tf.NewTensor(true)
+	originalinput := [10 * 160 * 160 * 3]float32{}
+	targetinput := [10][160][160][3]float32{}
+	tartTensor, _ := tf.NewTensor(targetinput)
+
+	tmpTensor, _ := tf.NewTensor(originalinput)
+	buf := new(bytes.Buffer)
+	if _, err := tmpTensor.WriteContentsTo(buf); nil != err {
+		seelog.Errorf("write buf err")
+		return
+	}
+	seelog.Tracef("tmpTensor's shape=%v,targetinpult's shape=%v", tmpTensor.Shape(), tartTensor.Shape())
+	fakeInput, readErr := tf.ReadTensor(tmpTensor.DataType(), []int64{10, 160, 160, 3}, buf)
+	if nil != readErr {
+		seelog.Errorf("read tensor err")
+		return
+	}
 
 	for {
 		t1 := time.Now()
@@ -282,7 +288,9 @@ func test1() {
 }
 
 func main() {
-	// return 
+	seelog.Infof("main begin")
+	defer seelog.Flush()
+	// return
 	// my_tf()
 	my_tf2()
 	// my_gf()
