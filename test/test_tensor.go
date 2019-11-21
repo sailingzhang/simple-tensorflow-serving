@@ -159,6 +159,15 @@ func my_tf2() {
 
 }
 
+func assertDimTest() {
+	var twoDim [20][5]float32
+	var in interface{}
+	in = twoDim
+	_, ok := in.([20][5]float32)
+	seelog.Tracef("assert ok=%v", ok)
+	return
+}
+
 func my_gf() {
 	model := tg.LoadModel("/tmp/emdmodel/10001", []string{"serve"}, nil)
 
@@ -292,6 +301,7 @@ func main() {
 	defer seelog.Flush()
 	// return
 	// my_tf()
-	my_tf2()
+	// my_tf2()
 	// my_gf()
+	assertDimTest()
 }
