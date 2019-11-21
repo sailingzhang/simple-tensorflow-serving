@@ -50,19 +50,61 @@ func getShapeFroTensorProto(req *pb.TensorProto) []int64 {
 	return rsp
 }
 
-func getTensorProtoFromTensor(req *tf.Tensor) *pb.TensorProto {
+func getTensorProtoFromTensor(req *tf.Tensor) (*pb.TensorProto,nil) {
 	rsp := pb.TensorProto{}
 	shapeproto := pb.TensorShapeProto{}
-	for _, v := range req.Shape() {
+	sliceLen := 1
+
+	for _, len := range req.Shape()[-1:] {
 		dim := pb.TensorShapeProto_Dim{}
-		dim.Size = v
-		shapeproto.Dim = append(shapeproto.Dim, &dim)
+		dim.Size = len
+		shapeproto.Dim = append(shapeproto.Dim,&dim)
+		sliceLen *= len
 	}
-	datetypeProto := getTensorProtoTypeFormTensor(req)
+	rsp.TensorShape = &shapeproto
+	converShape :=[]int64{sliceLen}
 
-	req.DataType()
-
-	req.Shape()
+	buf := new(bytes.Buffer)
+	if _, err := req.WriteContentsTo(buf); nil != err {
+		return &rsp, seelog.Errorf("write buf err")
+	}
+	newTensor, readErr := tf.ReadTensor(req.DataType(), converShape, buf)
+	if nil != readErr{
+		return nil,seelog.Errorf("read tensor err")
+	}
+	
+	
+	if  tf.Float == req.DataType(){
+		v,ok :=req.Value().([]float32)
+		if !ok{
+			return nil,seelog("assert bad")
+		}
+		rsp.Dtype = pb.DataType_DT_FLOAT
+		rsp.FloatVal = v
+	}else if tf.Double == req.DataType(){
+		v,ok := req.Value().([]float64)
+		if !ok{
+			return nil,seelog("assert bad")
+		}
+		rsp.Dtype = pb.DataType_DT_DOUBLE
+		rsp.DoubleVal = v
+	}else if tf.Bool == req.DataType(){
+		v,ok := req.Value().([]bool)
+		if !ok{
+			return nil,seelog("assert bad")
+		}
+		rsp.Dtype = pb.DataType_DT_BOOL
+		rsp.BoolVal = v
+	}else if tf.Int32 == req.DataType(){
+		v,ok := req.Value().([]int32)
+		if !ok{
+			return nil,seelog("assert bad")
+		}
+		rsp.Dtype = pb.DataType_DT_INT32
+		rsp.IntVal = v
+	}else{
+		return nil,seelog.Errorf("no support such type=%v",req.DataType())
+	}
 
 }
 
@@ -127,8 +169,9 @@ func (this *TfService1) Predict(ctx context.Context, req *pb.PredictRequest) (*p
 		outputTesorSlice = append(outputTesorSlice, model.Graph.Operation(outvalue).Output(0))
 	}
 	ret, err := model.Session.Run(inputTesorMap, outputTesorSlice, nil)
-	for _, v := range ret {
-
+	for _, outTensor := range ret {
+		shape:=outTensor.Shape()
+		reshape := 
 	}
 
 	// defer model.Session.Close()

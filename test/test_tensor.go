@@ -137,7 +137,7 @@ func my_tf2() {
 
 	for {
 		t1 := time.Now()
-		_, err := model.Session.Run(
+		ret, err := model.Session.Run(
 			map[tf.Output]*tf.Tensor{
 				model.Graph.Operation("input").Output(0):       fakeInput,
 				model.Graph.Operation("phase_train").Output(0): istrainInput, // Replace this with your input layer name
@@ -152,6 +152,7 @@ func my_tf2() {
 			fmt.Printf("Error running the session with input, err: %s\n", err.Error())
 			return
 		}
+		tensorValue := ret[0].Value()
 		t2 := time.Now()
 		fmt.Printf("tf cost2=%v\n", t2.Sub(t1))
 		// fmt.Printf("Result value: %v \n", result[0].Value())
@@ -165,6 +166,7 @@ func assertDimTest() {
 	in = twoDim
 	_, ok := in.([20][5]float32)
 	seelog.Tracef("assert ok=%v", ok)
+
 	return
 }
 
