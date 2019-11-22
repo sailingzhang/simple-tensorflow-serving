@@ -117,6 +117,63 @@ func my_tf2() {
 	// 	return
 	// }
 
+	istrainInput, _ := tf.NewTensor(false)
+	originalinput := [10 * 160 * 160 * 3]float32{}
+	targetinput := [10][160][160][3]float32{}
+	tartTensor, _ := tf.NewTensor(targetinput)
+
+	tmpTensor, _ := tf.NewTensor(originalinput)
+
+	seelog.Tracef("shape1=%v,shape2=%v", istrainInput.Shape(), tmpTensor.Shape())
+	buf := new(bytes.Buffer)
+	if _, err := tmpTensor.WriteContentsTo(buf); nil != err {
+		seelog.Errorf("write buf err")
+		return
+	}
+	seelog.Tracef("tmpTensor's shape=%v,targetinpult's shape=%v", tmpTensor.Shape(), tartTensor.Shape())
+	fakeInput, readErr := tf.ReadTensor(tmpTensor.DataType(), []int64{10, 160, 160, 3}, buf)
+	if nil != readErr {
+		seelog.Errorf("read tensor err")
+		return
+	}
+
+	for {
+		t1 := time.Now()
+		_, err := model.Session.Run(
+			map[tf.Output]*tf.Tensor{
+				model.Graph.Operation("input").Output(0):       fakeInput,
+				model.Graph.Operation("phase_train").Output(0): istrainInput, // Replace this with your input layer name
+			},
+			[]tf.Output{
+				model.Graph.Operation("embeddings").Output(0), // Replace this with your output layer name
+			},
+			nil,
+		)
+
+		if err != nil {
+			fmt.Printf("Error running the session with input, err: %s\n", err.Error())
+			return
+		}
+
+		t2 := time.Now()
+		fmt.Printf("tf cost2=%v\n", t2.Sub(t1))
+		// fmt.Printf("Result value: %v \n", result[0].Value())
+	}
+
+}
+
+func mytf3() {
+	seelog.Tracef("enter")
+
+	// replace myModel and myTag with the appropriate exported names in the chestrays-keras-binary-classification.ipynb
+	// model, err := tf.LoadSavedModel("/tmp/emdmodel/10001", []string{"myTag"}, nil)
+	model, err := tf.LoadSavedModel("/tmp/emdmodel/10001", []string{"serve"}, nil)
+	if err != nil {
+		fmt.Printf("Error loading saved model: %s\n", err.Error())
+		return
+	}
+	defer model.Session.Close()
+
 	istrainInput, _ := tf.NewTensor(true)
 	originalinput := [10 * 160 * 160 * 3]float32{}
 	targetinput := [10][160][160][3]float32{}
@@ -137,7 +194,7 @@ func my_tf2() {
 
 	for {
 		t1 := time.Now()
-		ret, err := model.Session.Run(
+		_, err := model.Session.Run(
 			map[tf.Output]*tf.Tensor{
 				model.Graph.Operation("input").Output(0):       fakeInput,
 				model.Graph.Operation("phase_train").Output(0): istrainInput, // Replace this with your input layer name
@@ -152,12 +209,11 @@ func my_tf2() {
 			fmt.Printf("Error running the session with input, err: %s\n", err.Error())
 			return
 		}
-		tensorValue := ret[0].Value()
+
 		t2 := time.Now()
 		fmt.Printf("tf cost2=%v\n", t2.Sub(t1))
 		// fmt.Printf("Result value: %v \n", result[0].Value())
 	}
-
 }
 
 func assertDimTest() {
@@ -303,7 +359,7 @@ func main() {
 	defer seelog.Flush()
 	// return
 	// my_tf()
-	// my_tf2()
+	my_tf2()
 	// my_gf()
-	assertDimTest()
+	// assertDimTest()
 }
