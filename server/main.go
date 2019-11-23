@@ -27,7 +27,7 @@ func main() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 	s := grpc.NewServer()
-	pb.RegisterPredictionServiceServer(s, &tfService.TfService1{})
+	pb.RegisterPredictionServiceServer(s, tfService.NewTfService1())
 	if err := s.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}

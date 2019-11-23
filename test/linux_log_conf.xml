@@ -7,7 +7,7 @@
 
         <filter levels="trace,info,debug,critical,error">
             <!--file path="/var/log/proxy_server.log" /-->    -->向文件输出。可以多个共存。
-			<rollingfile type="size" filename="/var/log/simple_tf_server.log" maxsize="10240000" maxrolls="5"/>
+			<rollingfile type="size" filename="/var/log/test.log" maxsize="10240000" maxrolls="5"/>
         </filter>
     </outputs>
     <formats>

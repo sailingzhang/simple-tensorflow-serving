@@ -115,6 +115,11 @@ type TfService1 struct {
 
 }
 
+func NewTfService1() *TfService1 {
+	ret := TfService1{}
+	ret.modelMap = make(map[string]*tf.SavedModel)
+	return &ret
+}
 func (this *TfService1) Classify(ctx context.Context, req *pb.ClassificationRequest) (*pb.ClassificationResponse, error) {
 	seelog.Tracef("dd")
 	return nil, nil
@@ -179,12 +184,21 @@ func (this *TfService1) Regress(ctx context.Context, req *pb.RegressionRequest) 
 // 	return nil, nil
 // }
 func costime(req time.Time) time.Duration {
-	t2 := time.Now()
-	return t2.Sub(req)
+	return time.Since(req)
+	// t2 := time.Now()
+	// return t2.Sub(req)
 }
+
+func timeCost(mess string, start time.Time) {
+	tc := time.Since(start)
+	seelog.Infof("mess=%s,time cost = %v\n", mess, tc)
+}
+
 func (this *TfService1) Predict(ctx context.Context, req *pb.PredictRequest) (*pb.PredictResponse, error) {
 	seelog.Tracef("enter")
-	defer seelog.Tracef("cost time=%v", costime(time.Now()))
+	begintime := time.Now()
+	defer seelog.Tracef("cost time=%v", costime(begintime))
+	defer timeCost("predict costtime", begintime)
 	var err error
 	rsp := pb.PredictResponse{}
 	rsp.Outputs = make(map[string]*pb.TensorProto)
@@ -194,11 +208,13 @@ func (this *TfService1) Predict(ctx context.Context, req *pb.PredictRequest) (*p
 	seelog.Tracef("modelname=%v,tag=%v", modelname, tag)
 	model, ok := this.modelMap[modelname]
 	if !ok {
+		seelog.Tracef("begin load model")
 		model, err = tf.LoadSavedModel(modelname, []string{tag}, nil)
 		if err != nil {
 			seelog.Errorf("open model=%v err, err=%v")
 			return &rsp, nil
 		}
+		this.modelMap[modelname] = model
 	}
 	seelog.Tracef("load model ok")
 	inputTesorMap := make(map[tf.Output]*tf.Tensor)
@@ -209,20 +225,32 @@ func (this *TfService1) Predict(ctx context.Context, req *pb.PredictRequest) (*p
 			seelog.Errorf("proto to tensor err")
 			return &rsp, nil
 		}
+		// seelog.Tracef("set input tensor,name=%v,tensor'shape=%v,tensor'dtype=%v,value=%v", inkey, InputTensor.Shape(), InputTensor.DataType(), InputTensor.Value())
 		seelog.Tracef("set input tensor,name=%v,tensor'shape=%v,tensor'dtype=%v", inkey, InputTensor.Shape(), InputTensor.DataType())
-		inputTesorMap[model.Graph.Operation(inkey).Output(0)] = InputTensor
+		op := model.Graph.Operation(inkey)
+		if nil == op {
+			seelog.Errorf("input op is nil")
+			return &rsp, nil
+		}
+		inputTesorMap[op.Output(0)] = InputTensor
 	}
 
 	for _, outvalue := range req.GetOutputFilter() {
 		seelog.Tracef("out key=%v", outvalue)
-		outputTesorSlice = append(outputTesorSlice, model.Graph.Operation(outvalue).Output(0))
+		op := model.Graph.Operation(outvalue)
+		if nil == op {
+			seelog.Errorf("ouput op is nil")
+			return &rsp, nil
+		}
+		outputTesorSlice = append(outputTesorSlice, op.Output(0))
 	}
+	modelbeginTime := time.Now()
 	ret, err := model.Session.Run(inputTesorMap, outputTesorSlice, nil)
 	if nil != err {
 		seelog.Errorf("mode run err=%v", err)
 		return &rsp, nil
 	}
-	seelog.Tracef("len(ret)=%v", len(ret))
+	seelog.Tracef("len(ret)=%v,model costtime=%v", len(ret), time.Now().Sub(modelbeginTime))
 	for index, outTensor := range ret {
 		seelog.Infof("outtensor=%v", outTensor)
 		outTensoProto, toErr := simpleUtility.TensorToProtoTensor(outTensor)
@@ -235,7 +263,7 @@ func (this *TfService1) Predict(ctx context.Context, req *pb.PredictRequest) (*p
 		rsp.Outputs[outputName] = outTensoProto
 	}
 
-	seelog.Tracef("exit")
+	seelog.Tracef("exit,cost=%v", time.Now().Sub(begintime))
 	// defer model.Session.Close()
 	return &rsp, nil
 }

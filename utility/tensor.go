@@ -51,6 +51,7 @@ func getShapeFromTensorProto(req *pb.TensorProto) []int64 {
 	for _, v := range dim {
 		rsp = append(rsp, v.Size)
 	}
+	seelog.Debugf("begin protoshape=%v,after tensorshpae=%v", dim, rsp)
 	return rsp
 }
 
@@ -83,8 +84,9 @@ func TensorToProtoTensor(req *tf.Tensor) (*pb.TensorProto, error) {
 	for _, len := range req.Shape() {
 		dim := pb.TensorShapeProto_Dim{}
 		dim.Size = len
-		Dim := []*pb.TensorShapeProto_Dim{&dim}
-		shapeproto.Dim = append(Dim, shapeproto.Dim...)
+		// Dim := []*pb.TensorShapeProto_Dim{&dim}
+		shapeproto.Dim = append(shapeproto.Dim, &dim)
+		// shapeproto.Dim = append(Dim, shapeproto.Dim...)
 		sliceLen *= len
 	}
 	rsp.TensorShape = &shapeproto
